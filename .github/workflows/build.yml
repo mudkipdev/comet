@@ -1,0 +1,16 @@
+name: Build
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build Project
+        run: swift build -v

@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:comet}",
+            "name": "Debug comet",
+            "target": "comet",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug comet"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:comet}",
+            "name": "Release comet",
+            "target": "comet",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release comet"
+        }
+    ]
+}
