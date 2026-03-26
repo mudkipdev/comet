@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "comet",
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.97.0")
     ],
