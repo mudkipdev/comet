@@ -12,7 +12,7 @@ let package = Package(
             name: "comet",
             dependencies: [
                 .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio")
+                .product(name: "NIOPosix", package: "swift-nio"),
             ],
             path: "src"
         ),
