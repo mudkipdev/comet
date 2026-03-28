@@ -11,3 +11,11 @@ struct BlockPosition {
     var y: Int32 = 0
     var z: Int32 = 0
 }
+
+func spawnPositionToPosition(_ spawnPosition: BlockPosition) -> Position {
+    return Position(
+        x: Double(spawnPosition.x) + 0.5,
+        y: Double(spawnPosition.y + 1),
+        z: Double(spawnPosition.z) + 0.5
+    )
+}

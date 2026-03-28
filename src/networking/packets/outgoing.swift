@@ -21,10 +21,10 @@ struct OutgoingLogin: OutgoingPacket {
 
 struct OutgoingPreLogin: OutgoingPacket {
     static let id: UInt8 = 0x02
-    var username: String
+    var connectionHash: String
 
     func write(to buffer: inout ByteBuffer) throws {
-        buffer.writeString16(username)
+        buffer.writeString16(connectionHash)
     }
 }
 

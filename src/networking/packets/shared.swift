@@ -51,6 +51,14 @@ struct PlayerPosition: SharedPacket {
 }
 
 extension PlayerPosition {
+    init(position: Position, onGround: Bool) {
+        x = position.x
+        y = position.y
+        cameraY = position.y + 1.62
+        z = position.z
+        self.onGround = onGround
+    }
+
     init(from buffer: inout ByteBuffer) throws {
         x = try buffer.readDouble()
         y = try buffer.readDouble()
@@ -76,6 +84,12 @@ struct PlayerRotation: SharedPacket {
 }
 
 extension PlayerRotation {
+    init(position: Position, onGround: Bool) {
+        yaw = position.yaw
+        pitch = position.pitch
+        self.onGround = onGround
+    }
+
     init(from buffer: inout ByteBuffer) throws {
         yaw = try buffer.readFloat()
         pitch = try buffer.readFloat()
@@ -101,6 +115,16 @@ struct PlayerPositionAndRotation: SharedPacket {
 }
 
 extension PlayerPositionAndRotation {
+    init(position: Position, onGround: Bool) {
+        x = position.x
+        y = position.y
+        cameraY = position.y + 1.62
+        z = position.z
+        yaw = position.yaw
+        pitch = position.pitch
+        self.onGround = onGround
+    }
+
     init(from buffer: inout ByteBuffer) throws {
         x = try buffer.readDouble()
         y = try buffer.readDouble()

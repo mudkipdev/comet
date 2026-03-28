@@ -2,6 +2,7 @@ import NIOCore
 import NIOPosix
 
 let ticksPerSecond = 20
+let viewDistance: Int32 = 4
 
 final class Server: @unchecked Sendable {
     let port: Int
@@ -56,16 +57,17 @@ final class Server: @unchecked Sendable {
     }
 
     private func handleConnection(_ channel: NIOAsyncChannel<ByteBuffer, ByteBuffer>) async throws {
-        try await channel.executeThenClose { inbound, outbound in
+        try await channel.executeThenClose { inboundStream, outboundStream in
             let connection = Connection(world: self.world, channel: channel.channel)
 
+            // player will be removed from the world when we exit this scope
             defer {
                 if let player = connection.player {
                     self.world.removePlayer(player)
                 }
             }
 
-            for try await var buffer in inbound {
+            for try await var buffer in inboundStream {
                 while buffer.readableBytes > 0 {
                     let id: UInt8 = try buffer.readInteger()
 
@@ -83,12 +85,12 @@ final class Server: @unchecked Sendable {
                         let name = connection.player?.username ?? "unknown"
                         print("Unknown packet ID 0x\(String(format: "%02X", id)) from \(name).")
                         try connection.send(Disconnect(reason: "Unknown packet"))
-                        try await outbound.write(connection.response)
+                        try await outboundStream.write(connection.response)
                         return
                     }
 
                     if connection.response.readableBytes > 0 {
-                        try await outbound.write(connection.response)
+                        try await outboundStream.write(connection.response)
                         connection.response = ByteBuffer()
                     }
                 }
@@ -103,62 +105,23 @@ final class Server: @unchecked Sendable {
     private static func buildRegistry() -> PacketRegistry {
         var registry = PacketRegistry()
 
-        registry.register(0x00, KeepAlive.self) { packet, connection in
-            if connection.player != nil {
-                try connection.send(packet)
-            }
-        }
+        registry.ignore(0x00, KeepAlive.self)
 
         registry.register(0x01, IncomingLogin.self) { packet, connection in
             let player = Player(
-                entityId: connection.world.allocateEntityId(),
-                username: packet.username,
-                channel: connection.channel
+                channel: connection.channel,
+                world: connection.world,
+                position: spawnPositionToPosition(connection.world.spawnPosition),
+                username: packet.username
             )
 
             connection.player = player
-            print("\(packet.username) joined the server.")
-
-            let spawnPosition = connection.world.spawnPosition
-
-            try connection.send(OutgoingLogin(
-                entityId: player.entityId,
-                worldSeed: connection.world.seed,
-                dimension: connection.world.dimension
-            ))
-
-            try connection.send(SetTime(time: connection.world.time))
-
-            let viewDistance: Int32 = 3
-
-            for chunkX in -viewDistance...viewDistance {
-                for chunkZ in -viewDistance...viewDistance {
-                    try connection.send(SetChunkVisibility(x: chunkX, z: chunkZ, load: true))
-                    let chunk = connection.world.getChunk(chunkX, chunkZ)
-
-                    if let chunkPacket = chunk.createChunkPacket() {
-                        try connection.send(chunkPacket)
-                    }
-                }
-            }
-
-            try connection.send(SetSpawnPosition(position: spawnPosition))
-
-            try connection.send(PlayerPositionAndRotation(
-                x: Double(spawnPosition.x),
-                y: Double(spawnPosition.y),
-                cameraY: Double(spawnPosition.y) + 1.62,
-                z: Double(spawnPosition.z),
-                yaw: 0.0,
-                pitch: 0.0,
-                onGround: false
-            ))
-
             connection.world.addPlayer(player)
+            try handlePlayerLogin(player)
         }
 
         registry.register(0x02, IncomingPreLogin.self) { packet, connection in
-            try connection.send(OutgoingPreLogin(username: "-"))
+            try connection.send(OutgoingPreLogin(connectionHash: "-"))
         }
 
         registry.register(0x03, ChatMessage.self) { packet, connection in
@@ -207,5 +170,32 @@ final class Server: @unchecked Sendable {
         registry.ignore(0x12, Animation.self)
         registry.ignore(0x13, PlayerAction.self)
         return registry
+    }
+
+    private static func handlePlayerLogin(_ player: Player) throws {
+        print("\(player.username) joined the server.")
+        let world = player.world
+
+        try player.sendPacket(OutgoingLogin(
+            entityId: player.entityId,
+            worldSeed: world.seed,
+            dimension: world.dimension
+        ))
+
+        try player.sendPacket(SetSpawnPosition(position: world.spawnPosition))
+        try player.sendPacket(SetTime(time: world.time))
+
+        for chunkX in -viewDistance...viewDistance {
+            for chunkZ in -viewDistance...viewDistance {
+                try player.sendPacket(SetChunkVisibility(x: chunkX, z: chunkZ, load: true))
+                let chunk = world.getChunk(chunkX, chunkZ)
+
+                if let packet = chunk.createChunkPacket() {
+                    try player.sendPacket(packet)
+                }
+            }
+        }
+
+        try player.sendPacket(PlayerPositionAndRotation(position: player.position, onGround: false))
     }
 }

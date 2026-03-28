@@ -1,22 +1,25 @@
 import NIOCore
 
 class Entity {
-    var entityId: Int32
-    var position = Position()
+    let world: World
+    var position: Position
+    let entityId: Int32
 
-    init(entityId: Int32) {
-        self.entityId = entityId
+    init(world: World, position: Position) {
+        self.world = world
+        self.position = position
+        self.entityId = world.allocateEntityId()
     }
 }
 
 class Player: Entity {
-    var username: String
     private let channel: Channel?
+    let username: String
 
-    init(entityId: Int32, username: String, channel: Channel? = nil) {
-        self.username = username
+    init(channel: Channel? = nil, world: World, position: Position, username: String) {
         self.channel = channel
-        super.init(entityId: entityId)
+        self.username = username
+        super.init(world: world, position: position)
     }
 
     func sendPacket(_ packet: OutgoingPacket) throws {

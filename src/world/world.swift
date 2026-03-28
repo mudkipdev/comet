@@ -86,9 +86,9 @@ final class World: @unchecked Sendable {
         time += 1
         ticks += 1
 
-        // send a time packet every second
+        // send a keep alive packet every second
         if ticks % ticksPerSecond == 0 {
-            broadcast(SetTime(time: time))
+            broadcast(KeepAlive())
         }
     }
 
