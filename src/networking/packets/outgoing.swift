@@ -81,7 +81,7 @@ struct ChunkPacket: OutgoingPacket {
 
     func write(to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(x)
-        buffer.writeInteger(0) // ???
+        buffer.writeInteger(Int16(0))
         buffer.writeInteger(z)
         buffer.writeInteger(width)
         buffer.writeInteger(height)

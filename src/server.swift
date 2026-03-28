@@ -5,13 +5,13 @@ let ticksPerSecond = 20
 let viewDistance: Int32 = 4
 
 final class Server: @unchecked Sendable {
-    let port: Int
+    let port: UInt16
     let world = World()
     let packetRegistry: PacketRegistry
 
     private var tickTask: Task<Void, Never>?
 
-    init(port: Int = 25565) {
+    init(port: UInt16 = 25565) {
         self.port = port
         self.packetRegistry = Server.buildRegistry()
     }
@@ -19,7 +19,7 @@ final class Server: @unchecked Sendable {
     func start() async throws {
         let server = try await ServerBootstrap(group: NIOSingletons.posixEventLoopGroup)
             .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
-            .bind(host: "0.0.0.0", port: port) { channel in
+            .bind(host: "0.0.0.0", port: Int(port)) { channel in
                 channel.eventLoop.makeCompletedFuture {
                     try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
                 }
@@ -146,26 +146,32 @@ final class Server: @unchecked Sendable {
 
         registry.register(0x0B, PlayerPosition.self) { packet, connection in
             if let player = connection.player {
-                player.position.x = packet.x
-                player.position.y = packet.y
-                player.position.z = packet.z
+                player.position = player.position.with(
+                    x: packet.x,
+                    y: packet.y,
+                    z: packet.z
+                )
             }
         }
 
         registry.register(0x0C, PlayerRotation.self) { packet, connection in
             if let player = connection.player {
-                player.position.yaw = packet.yaw
-                player.position.pitch = packet.pitch
+                player.position = player.position.with(
+                    yaw: packet.yaw,
+                    pitch: packet.pitch
+                )
             }
         }
 
         registry.register(0x0D, PlayerPositionAndRotation.self) { packet, connection in
             if let player = connection.player {
-                player.position.x = packet.x
-                player.position.y = packet.y
-                player.position.z = packet.z
-                player.position.yaw = packet.yaw
-                player.position.pitch = packet.pitch
+                player.position = Position(
+                    x: packet.x,
+                    y: packet.y,
+                    z: packet.z,
+                    yaw: packet.yaw,
+                    pitch: packet.pitch
+                )
             }
         }
 
