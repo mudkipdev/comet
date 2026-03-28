@@ -97,6 +97,20 @@ final class World: @unchecked Sendable {
         return id
     }
 
+    func getBlock(_ x: Int32, _ y: Int32, _ z: Int32) -> Block {
+        let chunk = getChunk(x >> 4, z >> 4)
+        return Block(rawValue: chunk.getBlock(Int(x & 0xF), Int(y), Int(z & 0xF))) ?? .air
+    }
+
+    func setBlock(_ x: Int32, _ y: Int32, _ z: Int32, _ block: Block) {
+        let chunkX = x >> 4
+        let chunkZ = z >> 4
+        let coordinates = ChunkCoordinates(x: chunkX, z: chunkZ)
+        var chunk = getChunk(chunkX, chunkZ)
+        chunk.setBlock(Int(x & 0xF), Int(y), Int(z & 0xF), block.rawValue)
+        chunks[coordinates] = chunk
+    }
+
     func getChunk(_ x: Int32, _ z: Int32) -> Chunk {
         let coordinates = ChunkCoordinates(x: x, z: z)
 

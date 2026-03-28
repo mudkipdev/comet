@@ -38,6 +38,22 @@ extension ByteBuffer {
         writeInteger(value.bitPattern)
     }
 
+    mutating func readString8() throws -> String {
+        let length = Int(try readInteger(as: UInt16.self))
+
+        guard let bytes = readBytes(length: length) else {
+            throw UnexpectedEndOfBuffer()
+        }
+
+        return String(decoding: bytes, as: UTF8.self)
+    }
+
+    mutating func writeString8(_ value: String) {
+        let bytes = Array(value.utf8)
+        writeInteger(UInt16(bytes.count))
+        writeBytes(bytes)
+    }
+
     mutating func readString16() throws -> String {
         let length = Int(try readInteger(as: UInt16.self))
 

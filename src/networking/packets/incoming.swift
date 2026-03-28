@@ -91,3 +91,21 @@ struct PlayerAction: IncomingPacket {
         type = ActionType(rawValue: try buffer.readInteger())!
     }
 }
+
+struct ClickSlot: IncomingPacket {
+    var windowId: Int8
+    var slot: Int16
+    var rightClick: Bool
+    var actionNumber: Int16
+    var holdingShift: Bool
+    var itemStack: ItemStack
+
+    init(from buffer: inout ByteBuffer) throws {
+        windowId = try buffer.readInteger()
+        slot = try buffer.readInteger()
+        rightClick = try buffer.readBoolean()
+        actionNumber = try buffer.readInteger()
+        holdingShift = try buffer.readBoolean()
+        itemStack = try ItemStack(from: &buffer)
+    }
+}

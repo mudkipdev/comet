@@ -181,6 +181,9 @@ final class Server: @unchecked Sendable {
         registry.ignore(0x10, SetHotbarSlot.self)
         registry.ignore(0x12, Animation.self)
         registry.ignore(0x13, PlayerAction.self)
+        registry.ignore(0x65, CloseContainer.self)
+        registry.ignore(0x66, ClickSlot.self)
+        registry.ignore(0x6A, ContainerTransaction.self)
         return registry
     }
 

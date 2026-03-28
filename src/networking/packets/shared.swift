@@ -146,6 +146,42 @@ extension PlayerPositionAndRotation {
     }
 }
 
+struct CloseContainer: SharedPacket {
+    static let id: UInt8 = 0x65
+    var windowId: Int8
+}
+
+extension CloseContainer {
+    init(from buffer: inout ByteBuffer) throws {
+        windowId = try buffer.readInteger()
+    }
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+    }
+}
+
+struct ContainerTransaction: SharedPacket {
+    static let id: UInt8 = 0x6A
+    var windowId: Int8
+    var actionNumber: Int16
+    var accepted: Bool
+}
+
+extension ContainerTransaction {
+    init(from buffer: inout ByteBuffer) throws {
+        windowId = try buffer.readInteger()
+        actionNumber = try buffer.readInteger()
+        accepted = try buffer.readBoolean()
+    }
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+        buffer.writeInteger(actionNumber)
+        buffer.writeBoolean(accepted)
+    }
+}
+
 struct Disconnect: SharedPacket {
     static let id: UInt8 = 0xFF
     var reason: String

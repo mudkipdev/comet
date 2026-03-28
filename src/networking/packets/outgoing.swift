@@ -90,3 +90,71 @@ struct ChunkPacket: OutgoingPacket {
         buffer.writeBytes(data)
     }
 }
+
+enum ContainerType: Int8 {
+    case chest = 0
+    case craftingTable = 1
+    case furnace = 2
+    case dispenser = 3
+}
+
+struct OpenContainer: OutgoingPacket {
+    static let id: UInt8 = 0x64
+    var windowId: Int8
+    var type: ContainerType
+    var title: String
+    var size: Int8
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+        buffer.writeInteger(type.rawValue)
+        buffer.writeString8(title)
+        buffer.writeInteger(size)
+    }
+}
+
+struct SetSlot: OutgoingPacket {
+    static let id: UInt8 = 0x67
+    var windowId: Int8
+    var slot: Int16
+    var itemStack: ItemStack
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+        buffer.writeInteger(slot)
+        itemStack.write(to: &buffer)
+    }
+}
+
+struct FillContainer: OutgoingPacket {
+    static let id: UInt8 = 0x68
+    var windowId: Int8
+    var items: [ItemStack]
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+        buffer.writeInteger(Int16(items.count))
+        for item in items {
+            item.write(to: &buffer)
+        }
+    }
+}
+
+enum ContainerDataType: Int16 {
+    case smeltingProgress = 0
+    case fuelRemaining = 1
+    case fuelDuration = 2
+}
+
+struct ContainerData: OutgoingPacket {
+    static let id: UInt8 = 0x69
+    var windowId: Int8
+    var type: ContainerDataType
+    var value: Int16
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(windowId)
+        buffer.writeInteger(type.rawValue)
+        buffer.writeInteger(value)
+    }
+}
