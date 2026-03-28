@@ -36,7 +36,6 @@ struct Chunk {
 
         return ChunkPacket(
             x: x * Int32(chunkWidth),
-            y: 0, // ???
             z: z * Int32(chunkLength),
             width: Int8(chunkWidth - 1),
             height: Int8(worldHeight - 1),

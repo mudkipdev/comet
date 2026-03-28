@@ -108,10 +108,16 @@ final class Server: @unchecked Sendable {
         registry.ignore(0x00, KeepAlive.self)
 
         registry.register(0x01, IncomingLogin.self) { packet, connection in
+            let spawnPosition = connection.world.spawnPosition
+
             let player = Player(
                 channel: connection.channel,
                 world: connection.world,
-                position: spawnPositionToPosition(connection.world.spawnPosition),
+                position: Position(
+                    x: Double(spawnPosition.x) + 0.5,
+                    y: Double(spawnPosition.y + 1),
+                    z: Double(spawnPosition.z) + 0.5
+                ),
                 username: packet.username
             )
 

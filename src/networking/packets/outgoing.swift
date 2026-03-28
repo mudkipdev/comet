@@ -73,7 +73,6 @@ struct SetChunkVisibility: OutgoingPacket {
 struct ChunkPacket: OutgoingPacket {
     static let id: UInt8 = 0x33
     var x: Int32
-    var y: Int16
     var z: Int32
     var width: Int8
     var height: Int8
@@ -82,7 +81,7 @@ struct ChunkPacket: OutgoingPacket {
 
     func write(to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(x)
-        buffer.writeInteger(y)
+        buffer.writeInteger(0) // ???
         buffer.writeInteger(z)
         buffer.writeInteger(width)
         buffer.writeInteger(height)
