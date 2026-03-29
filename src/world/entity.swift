@@ -12,7 +12,7 @@ class Entity {
     }
 }
 
-class Player: Entity {
+class Player: Entity, PacketReceiver {
     private let channel: Channel?
     let username: String
 
@@ -28,9 +28,5 @@ class Player: Entity {
         buffer.writeInteger(type(of: packet).id)
         try packet.write(to: &buffer)
         channel.writeAndFlush(buffer, promise: nil)
-    }
-
-    func sendMessage(_ message: String) {
-        try? sendPacket(ChatMessage(message: message))
     }
 }
