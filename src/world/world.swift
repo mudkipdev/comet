@@ -22,12 +22,13 @@ struct Chunk {
         y + (z * worldHeight) + (x * worldHeight * chunkLength)
     }
 
-    func getBlock(_ x: Int, _ y: Int, _ z: Int) -> UInt8 {
-        blocks[blockIndex(x, y, z)]
+    func getBlock(_ x: Int, _ y: Int, _ z: Int) -> Block {
+        Block(id: blocks[blockIndex(x, y, z)], data: blockData[blockIndex(x, y, z)])
     }
 
-    mutating func setBlock(_ x: Int, _ y: Int, _ z: Int, _ block: UInt8) {
-        blocks[blockIndex(x, y, z)] = block
+    mutating func setBlock(_ x: Int, _ y: Int, _ z: Int, _ block: BlockLike) {
+        blocks[blockIndex(x, y, z)] = block.asBlock().id
+        blockData[blockIndex(x, y, z)] = block.asBlock().data
     }
 
     func createChunkPacket() -> ChunkPacket? {
@@ -99,15 +100,16 @@ final class World: @unchecked Sendable {
 
     func getBlock(_ x: Int32, _ y: Int32, _ z: Int32) -> Block {
         let chunk = getChunk(x >> 4, z >> 4)
-        return Block(rawValue: chunk.getBlock(Int(x & 0xF), Int(y), Int(z & 0xF))) ?? .air
+        let block = chunk.getBlock(Int(x & 16), Int(y), Int(z & 16))
+        return block
     }
 
-    func setBlock(_ x: Int32, _ y: Int32, _ z: Int32, _ block: Block) {
+    func setBlock(_ x: Int32, _ y: Int32, _ z: Int32, _ block: BlockLike) {
         let chunkX = x >> 4
         let chunkZ = z >> 4
         let coordinates = ChunkCoordinates(x: chunkX, z: chunkZ)
         var chunk = getChunk(chunkX, chunkZ)
-        chunk.setBlock(Int(x & 0xF), Int(y), Int(z & 0xF), block.rawValue)
+        chunk.setBlock(Int(x & 16), Int(y), Int(z & 16), block)
         chunks[coordinates] = chunk
     }
 

@@ -26,13 +26,13 @@ struct DefaultWorldGenerator: WorldGenerator {
 
                 for y in 0..<height {
                     if y == 0 {
-                        chunk.setBlock(x, y, z, Block.bedrock.rawValue)
+                        chunk.setBlock(x, y, z, Block.bedrock)
                     } else if y < height - 4 {
-                        chunk.setBlock(x, y, z, Block.stone.rawValue)
+                        chunk.setBlock(x, y, z, Block.stone)
                     } else if y < height - 1 {
-                        chunk.setBlock(x, y, z, Block.dirt.rawValue)
+                        chunk.setBlock(x, y, z, Block.dirt)
                     } else {
-                        chunk.setBlock(x, y, z, Block.grass.rawValue)
+                        chunk.setBlock(x, y, z, Block.grass)
                     }
                 }
             }
@@ -51,12 +51,19 @@ struct DefaultWorldGenerator: WorldGenerator {
             let z = 3 + rng.nextInt(bound: chunkLength - 6)
             let y = heightMap[x][z]
 
-            if chunk.getBlock(x, y - 1, z) != Block.grass.rawValue { continue }
+            if chunk.getBlock(x, y - 1, z).id != Block.grass.id {
+                continue
+            }
 
             let height = 4 + rng.nextInt(bound: 3)
 
-            if y + height + 1 >= worldHeight { continue }
-            if !canPlaceTree(chunk, x: x, y: y, z: z, height: height) { continue }
+            if y + height + 1 >= worldHeight {
+                continue
+            }
+
+            if !canPlaceTree(chunk, x: x, y: y, z: z, height: height) {
+                continue
+            }
 
             placeTree(&chunk, x: x, y: y, z: z, height: height, rng: &rng)
         }
@@ -68,11 +75,19 @@ struct DefaultWorldGenerator: WorldGenerator {
 
             for xx in (x - radius)...(x + radius) {
                 for zz in (z - radius)...(z + radius) {
-                    if xx < 0 || xx >= chunkWidth || zz < 0 || zz >= chunkLength { return false }
-                    if yy < 0 || yy >= worldHeight { return false }
+                    if xx < 0 || xx >= chunkWidth || zz < 0 || zz >= chunkLength {
+                        return false
+                    }
+
+                    if yy < 0 || yy >= worldHeight {
+                        return false
+                    }
 
                     let block = chunk.getBlock(xx, yy, zz)
-                    if block != Block.air.rawValue && block != Block.leaves.rawValue { return false }
+
+                    if block.id != Block.air.id && block.id != Block.leaves.id {
+                        return false
+                    }
                 }
             }
         }
@@ -95,18 +110,18 @@ struct DefaultWorldGenerator: WorldGenerator {
                     let cornerZ = abs(zz - z) == radius
                     if cornerX && cornerZ && rng.nextInt(bound: 2) == 0 && dy == 0 { continue }
 
-                    if chunk.getBlock(xx, yy, zz) == Block.air.rawValue {
-                        chunk.setBlock(xx, yy, zz, Block.leaves.rawValue)
+                    if chunk.getBlock(xx, yy, zz).id == Block.air.id {
+                        chunk.setBlock(xx, yy, zz, Block.leaves)
                     }
                 }
             }
         }
 
         for yy in 0..<height {
-            chunk.setBlock(x, y + yy, z, Block.log.rawValue)
+            chunk.setBlock(x, y + yy, z, Block.log)
         }
 
-        chunk.setBlock(x, y - 1, z, Block.dirt.rawValue)
+        chunk.setBlock(x, y - 1, z, Block.dirt)
     }
 }
 
@@ -114,13 +129,13 @@ struct FlatWorldGenerator: WorldGenerator {
     func generate(_ chunk: inout Chunk) {
         for x in 0..<chunkWidth {
             for z in 0..<chunkLength {
-                chunk.setBlock(x, 0, z, Block.bedrock.rawValue)
+                chunk.setBlock(x, 0, z, Block.bedrock)
 
                 for y in 1..<4 {
-                    chunk.setBlock(x, y, z, Block.dirt.rawValue)
+                    chunk.setBlock(x, y, z, Block.dirt)
                 }
 
-                chunk.setBlock(x, 4, z, Block.grass.rawValue)
+                chunk.setBlock(x, 4, z, Block.grass)
             }
         }
     }
