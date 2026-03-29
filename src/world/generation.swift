@@ -33,6 +33,10 @@ struct DefaultWorldGenerator: WorldGenerator {
                         chunk.setBlock(x, y, z, Block.dirt)
                     } else {
                         chunk.setBlock(x, y, z, Block.grass)
+
+                        if chunk.x == 0 && chunk.z == 0 && x == 0 && z == 0 {
+                            chunk.setBlock(x, y + 1, z, Block.woodenStairs.facing(.east))
+                        }
                     }
                 }
             }

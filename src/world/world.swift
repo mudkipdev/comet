@@ -23,12 +23,29 @@ struct Chunk {
     }
 
     func getBlock(_ x: Int, _ y: Int, _ z: Int) -> Block {
-        Block(id: blocks[blockIndex(x, y, z)], data: blockData[blockIndex(x, y, z)])
+        let index = blockIndex(x, y, z)
+        let data = blockData[index / 2]
+        return Block(id: blocks[index], data: (index % 2 == 0) ? (data & 0x0F) : (data >> 4))
     }
 
     mutating func setBlock(_ x: Int, _ y: Int, _ z: Int, _ block: BlockLike) {
-        blocks[blockIndex(x, y, z)] = block.asBlock().id
-        blockData[blockIndex(x, y, z)] = block.asBlock().data
+        // set block id
+        let index = blockIndex(x, y, z)
+        let blockState = block.asBlock()
+        blocks[index] = blockState.id
+
+        // set block value
+        let byteIndex = index / 2
+        let newData = blockState.data & 0x0F
+        var byte = blockData[byteIndex]
+
+        if index % 2 == 0 {
+            byte = (byte & 0xF0) | newData
+        } else {
+            byte = (byte & 0x0F) | (newData << 4)
+        }
+
+        blockData[byteIndex] = byte
     }
 
     func createChunkPacket() -> ChunkPacket? {

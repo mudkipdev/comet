@@ -27,20 +27,20 @@ extension Block: BlockLike {
     }
 }
 
-enum Direction: UInt8 {
+enum Direction: UInt8, CaseIterable {
     case north = 0
     case east = 1
     case south = 2
     case west = 3
 }
 
-enum WoodType: UInt8 {
+enum WoodType: UInt8, CaseIterable {
     case oak = 0
     case spruce = 1
     case birch = 2
 }
 
-enum WoolColor: UInt8 {
+enum WoolColor: UInt8, CaseIterable {
     case white = 0
     case orange = 1
     case magenta = 2
@@ -59,20 +59,20 @@ enum WoolColor: UInt8 {
     case black = 15
 }
 
-enum SlabType: UInt8 {
+enum SlabType: UInt8, CaseIterable {
     case stone = 0
     case sandstone = 1
     case wood = 2
     case cobblestone = 3
 }
 
-enum TallGrassType: UInt8 {
+enum TallGrassType: UInt8, CaseIterable {
     case deadBush = 0
     case tallGrass = 1
     case fern = 2
 }
 
-enum TorchAttachment: UInt8 {
+enum TorchAttachment: UInt8, CaseIterable {
     case westWall = 1
     case eastWall = 2
     case northWall = 3
@@ -80,89 +80,78 @@ enum TorchAttachment: UInt8 {
     case floor = 5
 }
 
-enum RedstoneTorchAttachment: UInt8 {
-    case westWall = 1
-    case eastWall = 2
-    case southWall = 3
-    case northWall = 4
-    case floor = 5
+enum WallFacing: UInt8, CaseIterable {
+    case north = 2
+    case south = 3
+    case west = 4
+    case east = 5
 }
 
-enum WallFacing: UInt8 {
-    case south = 2
-    case north = 3
-    case east = 4
-    case west = 5
-}
-
-enum LeverMount: UInt8 {
+enum LeverMount: UInt8, CaseIterable {
     case westWall = 1
     case eastWall = 2
-    case southWall = 3
-    case northWall = 4
+    case northWall = 3
+    case southWall = 4
     case floorEastWest = 5
     case floorNorthSouth = 6
 }
 
-enum ButtonMount: UInt8 {
+enum ButtonMount: UInt8, CaseIterable {
     case westWall = 1
     case eastWall = 2
-    case southWall = 3
-    case northWall = 4
-    case ceiling = 5
+    case northWall = 3
+    case southWall = 4
 }
 
-enum RailShape: UInt8 {
+enum RailShape: UInt8, CaseIterable {
     case flatNorthSouth = 0
     case flatEastWest = 1
     case ascendingEast = 2
     case ascendingWest = 3
-    case ascendingSouth = 4
-    case ascendingNorth = 5
+    case ascendingNorth = 4
+    case ascendingSouth = 5
     case curveNorthEast = 6
     case curveSouthEast = 7
     case curveSouthWest = 8
     case curveNorthWest = 9
 }
 
-enum PistonFacing: UInt8 {
-    case up = 0
-    case down = 1
-    case south = 2
-    case north = 3
+enum PistonFacing: UInt8, CaseIterable {
+    case down = 0
+    case up = 1
+    case north = 2
+    case south = 3
     case west = 4
     case east = 5
 }
 
+enum StairsDirection: UInt8, CaseIterable {
+    case east = 0
+    case west = 1
+    case south = 2
+    case north = 3
+}
+
 struct StairsBuilder: BlockLike {
     let id: UInt8
-    let direction: Direction
-    let upsideDown: Bool
+    let direction: StairsDirection
 
-    init(id: UInt8, direction: Direction = .north, upsideDown: Bool = false) {
+    init(id: UInt8, direction: StairsDirection = .east) {
         self.id = id
         self.direction = direction
-        self.upsideDown = upsideDown
     }
 
     init(id: UInt8, data: UInt8) {
         self.id = id
-        self.direction = Direction(rawValue: data & 0x3) ?? .north
-        self.upsideDown = data & 0x4 != 0
+        self.direction = StairsDirection(rawValue: data & 0x3) ?? .east
     }
 
-    func facing(_ direction: Direction) -> StairsBuilder {
-        StairsBuilder(id: id, direction: direction, upsideDown: upsideDown)
-    }
-
-    func upsideDown(_ upsideDown: Bool) -> StairsBuilder {
-        StairsBuilder(id: id, direction: direction, upsideDown: upsideDown)
+    func facing(_ direction: StairsDirection) -> StairsBuilder {
+        StairsBuilder(id: id, direction: direction)
     }
 
     func asBlock() -> Block {
-        var data = direction.rawValue
-        if upsideDown { data |= 0x4 }
-        return Block(id: id, data: data)
+        Block(id: id, data: direction.rawValue)
     }
 }
 
@@ -200,29 +189,29 @@ struct FluidBuilder: BlockLike {
 
 struct SaplingBuilder: BlockLike {
     let id: UInt8 = 6
-    let treeType: WoodType
+    let type: WoodType
     let readyToGrow: Bool
 
-    init(treeType: WoodType = .oak, readyToGrow: Bool = false) {
-        self.treeType = treeType
+    init(type: WoodType = .oak, readyToGrow: Bool = false) {
+        self.type = type
         self.readyToGrow = readyToGrow
     }
 
     init(data: UInt8) {
-        self.treeType = WoodType(rawValue: data & 0x3) ?? .oak
+        self.type = WoodType(rawValue: data & 0x3) ?? .oak
         self.readyToGrow = data & 0x8 != 0
     }
 
-    func treeType(_ treeType: WoodType) -> SaplingBuilder {
-        SaplingBuilder(treeType: treeType, readyToGrow: readyToGrow)
+    func type(_ type: WoodType) -> SaplingBuilder {
+        SaplingBuilder(type: type, readyToGrow: readyToGrow)
     }
 
     func readyToGrow(_ readyToGrow: Bool) -> SaplingBuilder {
-        SaplingBuilder(treeType: treeType, readyToGrow: readyToGrow)
+        SaplingBuilder(type: type, readyToGrow: readyToGrow)
     }
 
     func asBlock() -> Block {
-        var data = treeType.rawValue
+        var data = type.rawValue
 
         if readyToGrow {
             data |= 0x8
@@ -234,50 +223,50 @@ struct SaplingBuilder: BlockLike {
 
 struct LogBuilder: BlockLike {
     let id: UInt8 = 17
-    let treeType: WoodType
+    let type: WoodType
 
-    init(treeType: WoodType = .oak) {
-        self.treeType = treeType
+    init(type: WoodType = .oak) {
+        self.type = type
     }
 
     init(data: UInt8) {
-        self.treeType = WoodType(rawValue: data & 0x3) ?? .oak
+        self.type = WoodType(rawValue: data & 0x3) ?? .oak
     }
 
-    func treeType(_ treeType: WoodType) -> LogBuilder {
-        LogBuilder(treeType: treeType)
+    func type(_ type: WoodType) -> LogBuilder {
+        LogBuilder(type: type)
     }
 
     func asBlock() -> Block {
-        Block(id: id, data: treeType.rawValue)
+        Block(id: id, data: type.rawValue)
     }
 }
 
 struct LeavesBuilder: BlockLike {
     let id: UInt8 = 18
-    let treeType: WoodType
+    let type: WoodType
     let decaying: Bool
 
-    init(treeType: WoodType = .oak, decaying: Bool = false) {
-        self.treeType = treeType
+    init(type: WoodType = .oak, decaying: Bool = false) {
+        self.type = type
         self.decaying = decaying
     }
 
     init(data: UInt8) {
-        self.treeType = WoodType(rawValue: data & 0x3) ?? .oak
+        self.type = WoodType(rawValue: data & 0x3) ?? .oak
         self.decaying = data & 0x8 != 0
     }
 
-    func treeType(_ treeType: WoodType) -> LeavesBuilder {
-        LeavesBuilder(treeType: treeType, decaying: decaying)
+    func type(_ type: WoodType) -> LeavesBuilder {
+        LeavesBuilder(type: type, decaying: decaying)
     }
 
     func decaying(_ decaying: Bool) -> LeavesBuilder {
-        LeavesBuilder(treeType: treeType, decaying: decaying)
+        LeavesBuilder(type: type, decaying: decaying)
     }
 
     func asBlock() -> Block {
-        var data = treeType.rawValue
+        var data = type.rawValue
 
         if decaying {
             data |= 0x8
@@ -289,22 +278,22 @@ struct LeavesBuilder: BlockLike {
 
 struct TallGrassBuilder: BlockLike {
     let id: UInt8 = 31
-    let variant: TallGrassType
+    let type: TallGrassType
 
-    init(variant: TallGrassType = .tallGrass) {
-        self.variant = variant
+    init(type: TallGrassType = .tallGrass) {
+        self.type = type
     }
 
     init(data: UInt8) {
-        self.variant = TallGrassType(rawValue: data) ?? .tallGrass
+        self.type = TallGrassType(rawValue: data) ?? .tallGrass
     }
 
-    func variant(_ variant: TallGrassType) -> TallGrassBuilder {
-        TallGrassBuilder(variant: variant)
+    func type(_ type: TallGrassType) -> TallGrassBuilder {
+        TallGrassBuilder(type: type)
     }
 
     func asBlock() -> Block {
-        Block(id: id, data: variant.rawValue)
+        Block(id: id, data: type.rawValue)
     }
 }
 
@@ -331,24 +320,24 @@ struct WoolBuilder: BlockLike {
 
 struct SlabBuilder: BlockLike {
     let id: UInt8
-    let material: SlabType
+    let type: SlabType
 
-    init(id: UInt8, material: SlabType = .stone) {
+    init(id: UInt8, type: SlabType = .stone) {
         self.id = id
-        self.material = material
+        self.type = type
     }
 
     init(id: UInt8, data: UInt8) {
         self.id = id
-        self.material = SlabType(rawValue: data) ?? .stone
+        self.type = SlabType(rawValue: data) ?? .stone
     }
 
-    func material(_ material: SlabType) -> SlabBuilder {
-        SlabBuilder(id: id, material: material)
+    func type(_ type: SlabType) -> SlabBuilder {
+        SlabBuilder(id: id, type: type)
     }
 
     func asBlock() -> Block {
-        Block(id: id, data: material.rawValue)
+        Block(id: id, data: type.rawValue)
     }
 }
 
@@ -377,19 +366,19 @@ struct TorchBuilder: BlockLike {
 
 struct RedstoneTorchBuilder: BlockLike {
     let id: UInt8
-    let attachment: RedstoneTorchAttachment
+    let attachment: TorchAttachment
 
-    init(id: UInt8, attachment: RedstoneTorchAttachment = .floor) {
+    init(id: UInt8, attachment: TorchAttachment = .floor) {
         self.id = id
         self.attachment = attachment
     }
 
     init(id: UInt8, data: UInt8) {
         self.id = id
-        self.attachment = RedstoneTorchAttachment(rawValue: data) ?? .floor
+        self.attachment = TorchAttachment(rawValue: data) ?? .floor
     }
 
-    func attachment(_ attachment: RedstoneTorchAttachment) -> RedstoneTorchBuilder {
+    func attachment(_ attachment: TorchAttachment) -> RedstoneTorchBuilder {
         RedstoneTorchBuilder(id: id, attachment: attachment)
     }
 
@@ -427,14 +416,19 @@ struct BedBuilder: BlockLike {
     let occupied: Bool
     let head: Bool
 
-    init(direction: Direction = .north, occupied: Bool = false, head: Bool = false) {
+    init(direction: Direction = .south, occupied: Bool = false, head: Bool = false) {
         self.direction = direction
         self.occupied = occupied
         self.head = head
     }
 
     init(data: UInt8) {
-        self.direction = Direction(rawValue: data & 0x3) ?? .north
+        switch data & 0x3 {
+        case 0: self.direction = .south
+        case 1: self.direction = .west
+        case 2: self.direction = .north
+        default: self.direction = .east
+        }
         self.occupied = data & 0x4 != 0
         self.head = data & 0x8 != 0
     }
@@ -452,7 +446,13 @@ struct BedBuilder: BlockLike {
     }
 
     func asBlock() -> Block {
-        var data = direction.rawValue
+        var data: UInt8
+        switch direction {
+        case .south: data = 0
+        case .west: data = 1
+        case .north: data = 2
+        case .east: data = 3
+        }
 
         if occupied {
             data |= 0x4
@@ -700,13 +700,13 @@ struct ButtonBuilder: BlockLike {
     let mount: ButtonMount
     let pressed: Bool
 
-    init(mount: ButtonMount = .ceiling, pressed: Bool = false) {
+    init(mount: ButtonMount = .westWall, pressed: Bool = false) {
         self.mount = mount
         self.pressed = pressed
     }
 
     init(data: UInt8) {
-        self.mount = ButtonMount(rawValue: data & 0x7) ?? .ceiling
+        self.mount = ButtonMount(rawValue: data & 0x7) ?? .westWall
         self.pressed = data & 0x8 != 0
     }
 
@@ -801,14 +801,19 @@ struct PumpkinBuilder: BlockLike {
     let id: UInt8
     let direction: Direction
 
-    init(id: UInt8, direction: Direction = .north) {
+    init(id: UInt8, direction: Direction = .south) {
         self.id = id
         self.direction = direction
     }
 
     init(id: UInt8, data: UInt8) {
         self.id = id
-        self.direction = Direction(rawValue: data & 0x3) ?? .north
+        switch data & 0x3 {
+        case 0: self.direction = .south
+        case 1: self.direction = .west
+        case 2: self.direction = .north
+        default: self.direction = .east
+        }
     }
 
     func facing(_ direction: Direction) -> PumpkinBuilder {
@@ -816,7 +821,14 @@ struct PumpkinBuilder: BlockLike {
     }
 
     func asBlock() -> Block {
-        Block(id: id, data: direction.rawValue)
+        var data: UInt8
+        switch direction {
+        case .south: data = 0
+        case .west: data = 1
+        case .north: data = 2
+        case .east: data = 3
+        }
+        return Block(id: id, data: data)
     }
 }
 
@@ -836,9 +848,9 @@ struct RepeaterBuilder: BlockLike {
 
         switch data & 0x3 {
         case 0: self.direction = .north
-        case 1: self.direction = .west
+        case 1: self.direction = .east
         case 2: self.direction = .south
-        default: self.direction = .east
+        default: self.direction = .west
         }
 
         self.delay = (data >> 2) & 0x3
@@ -861,9 +873,9 @@ struct RepeaterBuilder: BlockLike {
 
         switch direction {
         case .north: data = 0
-        case .west: data = 1
+        case .east: data = 1
         case .south: data = 2
-        case .east: data = 3
+        case .west: data = 3
         }
 
         data |= (delay & 0x3) << 2
@@ -967,5 +979,6 @@ extension Block {
     static let cake = Block(id: 92)
     static let redstoneRepeater = RepeaterBuilder(id: 93)
     static let litRedstoneRepeater = RepeaterBuilder(id: 94)
+    static let lockedChest = Block(id: 95)
     static let trapdoor = TrapdoorBuilder()
 }
