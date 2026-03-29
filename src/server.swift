@@ -75,6 +75,7 @@ final class Server: @unchecked Sendable {
                         let _ = try Disconnect(from: &buffer)
 
                         if let player = connection.player {
+                            world.sendMessage("\(ChatColor.yellow)\(player.username) left the game")
                             print("\(player.username) disconnected.")
                         }
 
@@ -133,7 +134,7 @@ final class Server: @unchecked Sendable {
         registry.register(0x03, ChatMessage.self) { packet, connection in
             if let player = connection.player {
                 let message = "<\(player.username)> \(packet.message)"
-                player.world.broadcast(ChatMessage(message: message))
+                player.world.sendMessage(message)
                 print(message)
             }
         }
@@ -214,5 +215,6 @@ final class Server: @unchecked Sendable {
         }
 
         try player.sendPacket(PlayerPositionAndRotation(position: player.position, onGround: false))
+        world.sendMessage("\(ChatColor.yellow)\(player.username) joined the game")
     }
 }

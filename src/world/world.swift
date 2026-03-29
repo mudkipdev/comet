@@ -68,7 +68,7 @@ struct ChunkCoordinates: Hashable {
     var z: Int32
 }
 
-final class World: @unchecked Sendable {
+final class World: @unchecked Sendable, PacketReceiver {
     var seed: Int64 = 0
     var dimension: Dimension = .overworld
     var spawnPosition = BlockPosition(x: 0, y: 68, z: 0)
@@ -93,7 +93,7 @@ final class World: @unchecked Sendable {
         players.removeAll { $0 === player }
     }
 
-    func broadcast(_ packet: OutgoingPacket) {
+    func sendPacket(_ packet: OutgoingPacket) {
         for player in players {
             try? player.sendPacket(packet)
         }
@@ -105,7 +105,7 @@ final class World: @unchecked Sendable {
 
         // send a keep alive packet every second
         if ticks % ticksPerSecond == 0 {
-            broadcast(KeepAlive())
+            sendPacket(KeepAlive())
         }
     }
 

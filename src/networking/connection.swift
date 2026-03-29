@@ -16,3 +16,13 @@ class Connection {
         try packet.write(to: &response)
     }
 }
+
+protocol PacketReceiver {
+    func sendPacket(_ packet: OutgoingPacket) throws
+}
+
+extension PacketReceiver {
+    func sendMessage(_ message: String) {
+        try? sendPacket(ChatMessage(message: message))
+    }
+}

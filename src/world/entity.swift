@@ -29,4 +29,8 @@ class Player: Entity {
         try packet.write(to: &buffer)
         channel.writeAndFlush(buffer, promise: nil)
     }
+
+    func sendMessage(_ message: String) {
+        try? sendPacket(ChatMessage(message: message))
+    }
 }
