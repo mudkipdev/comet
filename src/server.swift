@@ -132,7 +132,9 @@ final class Server: @unchecked Sendable {
 
         registry.register(0x03, ChatMessage.self) { packet, connection in
             if let player = connection.player {
-                print("<\(player.username)> \(packet.message)")
+                let message = "<\(player.username)> \(packet.message)"
+                player.world.broadcast(ChatMessage(message: message))
+                print(message)
             }
         }
 
