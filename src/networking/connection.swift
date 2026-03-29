@@ -5,6 +5,7 @@ class Connection {
     let world: World
     let channel: Channel
     var response = ByteBuffer()
+    var protocolVersion: Int32?
 
     init(world: World, channel: Channel) {
         self.world = world
@@ -13,7 +14,7 @@ class Connection {
 
     func send(_ packet: OutgoingPacket) throws {
         response.writeInteger(type(of: packet).id)
-        try packet.write(to: &response)
+        try packet.write(connection: self, to: &response)
     }
 }
 

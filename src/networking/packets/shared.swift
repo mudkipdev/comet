@@ -6,9 +6,9 @@ struct KeepAlive: SharedPacket {
     static let id: UInt8 = 0x00
     init() {}
 
-    init(from buffer: inout ByteBuffer) throws {}
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {}
 
-    func write(to buffer: inout ByteBuffer) throws {}
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {}
 }
 
 struct ChatMessage: SharedPacket {
@@ -17,11 +17,11 @@ struct ChatMessage: SharedPacket {
 }
 
 extension ChatMessage {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         message = try buffer.readString16()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeString16(message)
     }
 }
@@ -32,11 +32,11 @@ struct PlayerMovement: SharedPacket {
 }
 
 extension PlayerMovement {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         onGround = try buffer.readBoolean()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeBoolean(onGround)
     }
 }
@@ -59,7 +59,7 @@ extension PlayerPosition {
         self.onGround = onGround
     }
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         x = try buffer.readDouble()
         y = try buffer.readDouble()
         cameraY = try buffer.readDouble()
@@ -67,7 +67,7 @@ extension PlayerPosition {
         onGround = try buffer.readBoolean()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeDouble(x)
         buffer.writeDouble(y)
         buffer.writeDouble(cameraY)
@@ -90,13 +90,13 @@ extension PlayerRotation {
         self.onGround = onGround
     }
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         yaw = try buffer.readFloat()
         pitch = try buffer.readFloat()
         onGround = try buffer.readBoolean()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeFloat(yaw)
         buffer.writeFloat(pitch)
         buffer.writeBoolean(onGround)
@@ -125,7 +125,7 @@ extension PlayerPositionAndRotation {
         self.onGround = onGround
     }
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         x = try buffer.readDouble()
         y = try buffer.readDouble()
         cameraY = try buffer.readDouble()
@@ -135,7 +135,7 @@ extension PlayerPositionAndRotation {
         onGround = try buffer.readBoolean()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeDouble(x)
         buffer.writeDouble(y)
         buffer.writeDouble(cameraY)
@@ -152,11 +152,11 @@ struct CloseContainer: SharedPacket {
 }
 
 extension CloseContainer {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         windowId = try buffer.readInteger()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
     }
 }
@@ -169,13 +169,13 @@ struct ContainerTransaction: SharedPacket {
 }
 
 extension ContainerTransaction {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         windowId = try buffer.readInteger()
         actionNumber = try buffer.readInteger()
         accepted = try buffer.readBoolean()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
         buffer.writeInteger(actionNumber)
         buffer.writeBoolean(accepted)
@@ -188,11 +188,11 @@ struct Disconnect: SharedPacket {
 }
 
 extension Disconnect {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         reason = try buffer.readString16()
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeString16(reason)
     }
 }
@@ -203,12 +203,12 @@ struct Respawn: SharedPacket {
 }
 
 extension Respawn {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         let raw: Int8 = try buffer.readInteger()
         dimension = Dimension(rawValue: raw) ?? .overworld
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(dimension.rawValue)
     }
 }
@@ -225,13 +225,13 @@ struct Animation: SharedPacket {
 }
 
 extension Animation {
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         playerId = try buffer.readInteger()
         let raw: Int8 = try buffer.readInteger()
         type = AnimationType(rawValue: raw)!
     }
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(playerId)
         buffer.writeInteger(type.rawValue)
     }

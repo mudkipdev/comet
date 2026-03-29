@@ -1,25 +1,38 @@
 import NIOCore
 
 protocol IncomingPacket {
-    init(from buffer: inout ByteBuffer) throws
+    init(connection: Connection, from buffer: inout ByteBuffer) throws
 }
 
 struct IncomingLogin: IncomingPacket {
     var protocolVersion: Int32
     var username: String
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         protocolVersion = try buffer.readInteger()
+        connection.protocolVersion = protocolVersion
+
         username = try buffer.readString16()
         let _: Int64 = try buffer.readInteger()
-        let _: Int8 = try buffer.readInteger()
+
+        if protocolVersion == 17 {
+            // Beta 1.8
+            let _: Int32 = try buffer.readInteger()
+            let _: Int8 = try buffer.readInteger()
+            let _: Int8 = try buffer.readInteger()
+            let _: UInt8 = try buffer.readInteger()
+            let _: UInt8 = try buffer.readInteger()
+        } else if protocolVersion == 14 {
+            // Beta 1.7.3
+            let _: Int8 = try buffer.readInteger()
+        }
     }
 }
 
 struct IncomingPreLogin: IncomingPacket {
     var username: String
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         username = try buffer.readString16()
     }
 }
@@ -29,7 +42,7 @@ struct InteractWithEntity: IncomingPacket {
     var entityId: Int32
     var isAttack: Bool
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         playerId = try buffer.readInteger()
         entityId = try buffer.readInteger()
         isAttack = try buffer.readBoolean()
@@ -43,7 +56,7 @@ struct MineBlock: IncomingPacket {
     var z: Int32
     var face: Int8
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         status = try buffer.readInteger()
         x = try buffer.readInteger()
         y = try buffer.readInteger()
@@ -59,7 +72,7 @@ struct PlaceBlock: IncomingPacket {
     var face: Int8
     var itemStack: ItemStack
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         x = try buffer.readInteger()
         y = try buffer.readInteger()
         z = try buffer.readInteger()
@@ -71,7 +84,7 @@ struct PlaceBlock: IncomingPacket {
 struct SetHotbarSlot: IncomingPacket {
     var slot: Int16
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         slot = try buffer.readInteger()
     }
 }
@@ -86,7 +99,7 @@ struct PlayerAction: IncomingPacket {
     var entityId: Int32
     var type: ActionType
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         entityId = try buffer.readInteger()
         type = ActionType(rawValue: try buffer.readInteger())!
     }
@@ -100,7 +113,7 @@ struct ClickSlot: IncomingPacket {
     var holdingShift: Bool
     var itemStack: ItemStack
 
-    init(from buffer: inout ByteBuffer) throws {
+    init(connection: Connection, from buffer: inout ByteBuffer) throws {
         windowId = try buffer.readInteger()
         slot = try buffer.readInteger()
         rightClick = try buffer.readBoolean()

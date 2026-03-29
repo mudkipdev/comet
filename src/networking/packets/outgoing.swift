@@ -2,7 +2,7 @@ import NIOCore
 
 protocol OutgoingPacket {
     static var id: UInt8 { get }
-    func write(to buffer: inout ByteBuffer) throws
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws
 }
 
 struct OutgoingLogin: OutgoingPacket {
@@ -11,11 +11,22 @@ struct OutgoingLogin: OutgoingPacket {
     var worldSeed: Int64
     var dimension: Dimension
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(entityId)
         buffer.writeString16("")
         buffer.writeInteger(worldSeed)
-        buffer.writeInteger(dimension.rawValue)
+
+        if connection.protocolVersion == 17 {
+            // Beta 1.8
+            buffer.writeInteger(Int32(1)) // 0 for survival, 1 for creative
+            buffer.writeInteger(dimension.rawValue)
+            buffer.writeInteger(Int8(2)) // normal difficulty
+            buffer.writeInteger(UInt8(128)) // world height
+            buffer.writeInteger(UInt8(8)) // max players
+        } else {
+            // Beta 1.7.3
+            buffer.writeInteger(dimension.rawValue)
+        }
     }
 }
 
@@ -23,7 +34,7 @@ struct OutgoingPreLogin: OutgoingPacket {
     static let id: UInt8 = 0x02
     var connectionHash: String
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeString16(connectionHash)
     }
 }
@@ -32,7 +43,7 @@ struct SetTime: OutgoingPacket {
     static let id: UInt8 = 0x04
     var time: Int64
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(time)
     }
 }
@@ -41,7 +52,7 @@ struct SetSpawnPosition: OutgoingPacket {
     static let id: UInt8 = 0x06
     var position: BlockPosition
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(position.x)
         buffer.writeInteger(position.y)
         buffer.writeInteger(position.z)
@@ -52,7 +63,7 @@ struct SetHealth: OutgoingPacket {
     static let id: UInt8 = 0x08
     var health: Int16
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(health)
     }
 }
@@ -63,7 +74,7 @@ struct SetChunkVisibility: OutgoingPacket {
     var z: Int32
     var load: Bool
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(x)
         buffer.writeInteger(z)
         buffer.writeBoolean(load)
@@ -79,7 +90,7 @@ struct ChunkPacket: OutgoingPacket {
     var length: Int8
     var data: [UInt8]
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(x)
         buffer.writeInteger(Int16(0))
         buffer.writeInteger(z)
@@ -105,7 +116,7 @@ struct OpenContainer: OutgoingPacket {
     var title: String
     var size: Int8
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
         buffer.writeInteger(type.rawValue)
         buffer.writeString8(title)
@@ -119,7 +130,7 @@ struct SetSlot: OutgoingPacket {
     var slot: Int16
     var itemStack: ItemStack
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
         buffer.writeInteger(slot)
         itemStack.write(to: &buffer)
@@ -131,7 +142,7 @@ struct FillContainer: OutgoingPacket {
     var windowId: Int8
     var items: [ItemStack]
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
         buffer.writeInteger(Int16(items.count))
         for item in items {
@@ -152,7 +163,7 @@ struct ContainerData: OutgoingPacket {
     var type: ContainerDataType
     var value: Int16
 
-    func write(to buffer: inout ByteBuffer) throws {
+    func write(connection: Connection, to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(windowId)
         buffer.writeInteger(type.rawValue)
         buffer.writeInteger(value)
