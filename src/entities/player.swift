@@ -4,7 +4,12 @@ class Player: Entity, PacketReceiver {
     let username: String
     var ready: Bool = false
 
-    var heldItemSlot = 0
+    var heldItemSlot = 0 {
+        didSet {
+            try? syncHeldItem()
+        }
+    }
+
     let inventory = Container(size: 45)
 
     private let channel: Channel?
@@ -41,6 +46,10 @@ class Player: Entity, PacketReceiver {
                     slot: convertSlotToNetwork(Int16(slot)),
                     itemStack: itemStack
                 ))
+
+                if slot == heldItemSlot {
+                    try? syncHeldItem()
+                }
             },
 
             onFillContainer: { [weak self] items in
@@ -79,6 +88,16 @@ class Player: Entity, PacketReceiver {
         buffer.writeInteger(type(of: packet).id)
         try packet.write(to: &buffer)
         channel.writeAndFlush(buffer, promise: nil)
+    }
+
+    func syncHeldItem() throws {
+        for otherPlayer in world.players where otherPlayer !== self {
+            try? otherPlayer.sendPacket(SetEquipment(
+                entityId: id,
+                type: EquipmentType.heldItem,
+                itemStack: heldItem
+            ))
+        }
     }
 
     private func convertSlotToNetwork(_ slot: Int16) -> Int16 {

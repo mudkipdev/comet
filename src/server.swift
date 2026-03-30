@@ -196,7 +196,7 @@ final class Server: @unchecked Sendable {
                 return
             }
 
-            guard packet.itemStack.id > 0 else {
+            guard packet.itemStack.id > 0, player.heldItem.id > 0 else {
                 return
             }
 
@@ -212,12 +212,16 @@ final class Server: @unchecked Sendable {
             default: return
             }
 
-            let block = Block(id: UInt8(packet.itemStack.id), data: UInt8(packet.itemStack.metadata))
+            let block = Block(id: UInt8(player.heldItem.id), data: UInt8(player.heldItem.metadata))
             player.heldItem = player.heldItem.withAmount(player.heldItem.amount - 1)
             player.world.setBlock(x, y, z, block)
         }
 
-        registry.ignore(0x10, SetHotbarSlot.self)
+        registry.register(0x10, SetHotbarSlot.self) { packet, connection in
+            if let player = connection.player {
+                player.heldItemSlot = Int(packet.slot)
+            }
+        }
 
         registry.register(0x12, Animation.self) { packet, connection in
             guard let player = connection.player else {

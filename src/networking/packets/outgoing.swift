@@ -37,6 +37,28 @@ struct SetTime: OutgoingPacket {
     }
 }
 
+enum EquipmentType: Int16 {
+    case heldItem = 0
+    case boots = 1
+    case leggings = 2
+    case chestplate = 3
+    case helmet = 4
+}
+
+struct SetEquipment: OutgoingPacket {
+    static let id: UInt8 = 0x05
+    var entityId: Int32
+    var type: EquipmentType
+    var itemStack: ItemStack
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(entityId)
+        buffer.writeInteger(type.rawValue)
+        buffer.writeInteger(itemStack.id)
+        buffer.writeInteger(itemStack.metadata)
+    }
+}
+
 struct SetSpawnPosition: OutgoingPacket {
     static let id: UInt8 = 0x06
     var position: BlockPosition
