@@ -96,13 +96,26 @@ class Entity {
 
 class Player: Entity, PacketReceiver {
     let username: String
-    let inventory = Container(size: 45)
     var ready: Bool = false
+
+    var heldItemSlot = 0
+    let inventory = Container(size: 45)
+
     private let channel: Channel?
 
     var sneaking: Bool = false {
         didSet {
             dataTracker.set(id: 0, .byte(sneaking ? 0x02 : 0x00))
+        }
+    }
+
+    var heldItem: ItemStack {
+        get {
+            inventory.getItemStack(slot: heldItemSlot)
+        }
+
+        set {
+            inventory.setItemStack(slot: heldItemSlot, newValue)
         }
     }
 

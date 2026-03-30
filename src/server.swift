@@ -213,6 +213,7 @@ final class Server: @unchecked Sendable {
             }
 
             let block = Block(id: UInt8(packet.itemStack.id), data: UInt8(packet.itemStack.metadata))
+            player.heldItem = player.heldItem.withAmount(player.heldItem.amount - 1)
             player.world.setBlock(x, y, z, block)
         }
 
