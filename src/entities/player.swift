@@ -68,6 +68,7 @@ class Player: Entity, PacketReceiver {
                 }
 
                 try? sendPacket(FillContainer(windowId: 0, items: reorderedItems))
+                try? syncHeldItem()
             }
         )
     }
