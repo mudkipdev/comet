@@ -2,17 +2,19 @@ import NIOCore
 
 class Player: Entity, PacketReceiver {
     let username: String
+    let inventory = Container(size: 45)
     var ready: Bool = false
+    private let channel: Channel?
+
+    var admin: Bool {
+        world.server.config.admins.contains(username)
+    }
 
     var heldItemSlot = 0 {
         didSet {
             try? syncHeldItem()
         }
     }
-
-    let inventory = Container(size: 45)
-
-    private let channel: Channel?
 
     var sneaking: Bool = false {
         didSet {

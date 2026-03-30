@@ -8,13 +8,9 @@ protocol Command {
     static var name: String { get }
     static var usage: String { get }
     static var description: String { get }
+    static var adminOnly: Bool { get }
 
-    static func hasPermission(player: Player) -> Bool
     static func execute(player: Player, arguments: [String]) throws
-}
-
-extension Command {
-    static func hasPermission(player: Player) -> Bool { true }
 }
 
 struct CommandRegistry {
@@ -37,7 +33,7 @@ struct CommandRegistry {
             throw CommandError.unknownCommand
         }
 
-        guard type.hasPermission(player: player) else {
+        guard !type.adminOnly || player.admin else {
             throw CommandError.noPermission
         }
 
@@ -49,6 +45,7 @@ enum ClearCommand: Command {
     static let name = "clear"
     static let usage = "/clear"
     static let description = "Clear your inventory"
+    static let adminOnly = true
 
     static func execute(player: Player, arguments: [String]) throws {
         guard arguments.isEmpty else {
@@ -63,6 +60,7 @@ enum GiveCommand: Command {
     static let name = "give"
     static let usage = "/give <id> [amount]"
     static let description = "Give yourself an item"
+    static let adminOnly = true
 
     static func execute(player: Player, arguments: [String]) throws {
         guard arguments.count == 1 || arguments.count == 2 else {
@@ -90,6 +88,7 @@ enum HelpCommand: Command {
     static let name = "help"
     static let usage = "/help"
     static let description = "List all commands"
+    static let adminOnly = false
 
     static func execute(player: Player, arguments: [String]) throws {
         guard arguments.isEmpty else {

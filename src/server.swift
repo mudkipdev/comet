@@ -37,27 +37,27 @@ private func handlePlayerLogin(_ player: Player) throws {
 }
 
 final class Server: @unchecked Sendable {
-    let port: UInt16
+    let config: Config
     lazy var world = World(server: self)
     lazy var packetRegistry: PacketRegistry = buildPacketRegistry()
     lazy var commandRegistry: CommandRegistry = buildCommandRegistry()
 
     private var tickTask: Task<Void, Never>?
 
-    init(port: UInt16 = 25565) {
-        self.port = port
+    init(config: Config) {
+        self.config = config
     }
 
     func start() async throws {
         let server = try await ServerBootstrap(group: NIOSingletons.posixEventLoopGroup)
             .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
-            .bind(host: "0.0.0.0", port: Int(port)) { channel in
+            .bind(host: "0.0.0.0", port: Int(config.port)) { channel in
                 channel.eventLoop.makeCompletedFuture {
                     try NIOAsyncChannel<ByteBuffer, ByteBuffer>(wrappingChannelSynchronously: channel)
                 }
             }
 
-        print("Started server on port \(port).")
+        print("Started server on port \(config.port).")
 
         tickTask = Task {
             await self.tick()
