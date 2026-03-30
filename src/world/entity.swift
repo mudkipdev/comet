@@ -26,7 +26,7 @@ class Player: Entity, PacketReceiver {
         guard let channel else { return }
         var buffer = ByteBuffer()
         buffer.writeInteger(type(of: packet).id)
-        try packet.write(to: &buffer)
+        try packet.write(connection: connection, to: &buffer)
         channel.writeAndFlush(buffer, promise: nil)
     }
 }

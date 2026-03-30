@@ -72,7 +72,7 @@ final class Server: @unchecked Sendable {
                     let id: UInt8 = try buffer.readInteger()
 
                     if id == 0xFF {
-                        let _ = try Disconnect(from: &buffer)
+                        let _ = try Disconnect(connection: connection, from: &buffer)
 
                         if let player = connection.player {
                             world.sendMessage("\(ChatColor.yellow)\(player.username) left the game")

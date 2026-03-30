@@ -5,7 +5,7 @@ struct PacketRegistry: @unchecked Sendable {
 
     mutating func register<P: IncomingPacket>(_ id: UInt8, _: P.Type, handler: @escaping (P, Connection) throws -> Void) {
         handlers[id] = { buffer, connection in
-            let packet = try P(from: &buffer)
+            let packet = try P(connection: connection, from: &buffer)
             try handler(packet, connection)
         }
     }
