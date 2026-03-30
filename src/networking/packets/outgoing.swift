@@ -57,6 +57,94 @@ struct SetHealth: OutgoingPacket {
     }
 }
 
+struct SpawnPlayer: OutgoingPacket {
+    static let id: UInt8 = 0x14
+    var entityId: Int32
+    var username: String
+    var x: Int32
+    var y: Int32
+    var z: Int32
+    var yaw: Int8
+    var pitch: Int8
+    var heldItem: Int16
+
+    init(player: Player) {
+        entityId = player.entityId
+        username = player.username
+        x = Int32(player.position.x)
+        y = Int32(player.position.y)
+        z = Int32(player.position.z)
+        yaw = Int8(truncatingIfNeeded: Int32((player.position.yaw / 360.0) * 255.0))
+        pitch = Int8(truncatingIfNeeded: Int32((player.position.pitch / 360.0) * 255.0))
+        heldItem = 0
+    }
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(entityId)
+        buffer.writeString16(username)
+        buffer.writeInteger(x)
+        buffer.writeInteger(y)
+        buffer.writeInteger(z)
+        buffer.writeInteger(yaw)
+        buffer.writeInteger(pitch)
+        buffer.writeInteger(heldItem)
+    }
+}
+
+struct DespawnEntity: OutgoingPacket {
+    static let id: UInt8 = 0x1D
+    var entityId: Int32
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(entityId)
+    }
+}
+
+struct TeleportEntity: OutgoingPacket {
+    static let id: UInt8 = 0x22
+    var entityId: Int32
+    var x: Int32
+    var y: Int32
+    var z: Int32
+    var yaw: Int8
+    var pitch: Int8
+
+    init(entity: Entity) {
+        entityId = entity.entityId
+        x = Int32(entity.position.x * 32)
+        y = Int32(entity.position.y * 32)
+        z = Int32(entity.position.z * 32)
+        yaw = Int8(truncatingIfNeeded: Int32((entity.position.yaw / 360.0) * 255.0))
+        pitch = Int8(truncatingIfNeeded: Int32((entity.position.pitch / 360.0) * 255.0))
+    }
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(entityId)
+        buffer.writeInteger(x)
+        buffer.writeInteger(y)
+        buffer.writeInteger(z)
+        buffer.writeInteger(yaw)
+        buffer.writeInteger(pitch)
+    }
+}
+
+struct SetBlock: OutgoingPacket {
+    static let id: UInt8 = 0x35
+    var x: Int32
+    var y: Int8
+    var z: Int32
+    var type: UInt8
+    var metadata: UInt8
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(x)
+        buffer.writeInteger(y)
+        buffer.writeInteger(z)
+        buffer.writeInteger(type)
+        buffer.writeInteger(metadata)
+    }
+}
+
 struct SetChunkVisibility: OutgoingPacket {
     static let id: UInt8 = 0x32
     var x: Int32

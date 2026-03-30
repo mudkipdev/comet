@@ -9,8 +9,8 @@ struct Position {
         self.x = x
         self.y = y
         self.z = z
-        self.yaw = 0.0
-        self.pitch = 0.0
+        self.yaw = yaw
+        self.pitch = pitch
     }
 
     func with(

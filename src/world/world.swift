@@ -78,7 +78,7 @@ final class World: @unchecked Sendable, PacketReceiver {
     var ticks: Int = 0
 
     let generator: WorldGenerator
-    private var players: [Player] = []
+    public private(set) var players: [Player] = []
 
     init(seed: Int64 = 0, generator: WorldGenerator? = nil) {
         self.seed = seed
@@ -86,11 +86,19 @@ final class World: @unchecked Sendable, PacketReceiver {
     }
 
     func addPlayer(_ player: Player) {
+        for otherPlayer in players {
+            try? otherPlayer.sendPacket(SpawnPlayer(player: player))
+        }
+
         players.append(player)
     }
 
     func removePlayer(_ player: Player) {
         players.removeAll { $0 === player }
+
+        for otherPlayer in players {
+            try? otherPlayer.sendPacket(DespawnEntity(entityId: player.entityId))
+        }
     }
 
     func sendPacket(_ packet: OutgoingPacket) {
@@ -107,6 +115,12 @@ final class World: @unchecked Sendable, PacketReceiver {
         if ticks % ticksPerSecond == 0 {
             sendPacket(KeepAlive())
         }
+
+        for player in players {
+            for otherPlayer in players where otherPlayer !== player {
+                try? player.sendPacket(TeleportEntity(entity: otherPlayer))
+            }
+        }
     }
 
     func allocateEntityId() -> Int32 {
@@ -117,7 +131,7 @@ final class World: @unchecked Sendable, PacketReceiver {
 
     func getBlock(_ x: Int32, _ y: Int32, _ z: Int32) -> Block {
         let chunk = getChunk(x >> 4, z >> 4)
-        let block = chunk.getBlock(Int(x & 16), Int(y), Int(z & 16))
+        let block = chunk.getBlock(Int(x & 15), Int(y), Int(z & 15))
         return block
     }
 
@@ -126,8 +140,10 @@ final class World: @unchecked Sendable, PacketReceiver {
         let chunkZ = z >> 4
         let coordinates = ChunkCoordinates(x: chunkX, z: chunkZ)
         var chunk = getChunk(chunkX, chunkZ)
-        chunk.setBlock(Int(x & 16), Int(y), Int(z & 16), block)
+        chunk.setBlock(Int(x & 15), Int(y), Int(z & 15), block)
         chunks[coordinates] = chunk
+        let b = block.asBlock()
+        sendPacket(SetBlock(x: x, y: Int8(y), z: z, type: b.id, metadata: b.data))
     }
 
     func getChunk(_ x: Int32, _ z: Int32) -> Chunk {

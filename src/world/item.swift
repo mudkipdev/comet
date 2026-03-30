@@ -5,12 +5,13 @@ enum Item: Int16 {
 }
 
 struct ItemStack {
+    var id: Int16
     var item: Item
     var amount: Int8 = 1
     var metadata: Int16 = 0
 
     init(from buffer: inout ByteBuffer) throws {
-        let id: Int16 = try buffer.readInteger()
+        id = try buffer.readInteger()
         item = Item(rawValue: id) ?? .air
 
         if id > 0 {

@@ -33,10 +33,12 @@ final class Server: @unchecked Sendable {
 
         try await server.executeThenClose { clients in
             for try await client in clients {
-                do {
-                    try await self.handleConnection(client)
-                } catch {
-                    print("Connection error: \(error)")
+                Task {
+                    do {
+                        try await self.handleConnection(client)
+                    } catch {
+                        print("Connection error: \(error)")
+                    }
                 }
             }
         }
@@ -178,11 +180,51 @@ final class Server: @unchecked Sendable {
             }
         }
 
-        // stuff for later
-        registry.ignore(0x0E, MineBlock.self)
-        registry.ignore(0x0F, PlaceBlock.self)
+        registry.register(0x0E, MineBlock.self) { packet, connection in
+            guard packet.status == 2, let player = connection.player else {
+                return
+            }
+
+            player.world.setBlock(packet.x, Int32(packet.y), packet.z, Block.air)
+        }
+
+        registry.register(0x0F, PlaceBlock.self) { packet, connection in
+            guard let player = connection.player else {
+                return
+            }
+
+            guard packet.itemStack.id > 0 else {
+                return
+            }
+
+            var x = packet.x, y = Int32(packet.y), z = packet.z
+
+            switch packet.face {
+            case 0: y -= 1
+            case 1: y += 1
+            case 2: z -= 1
+            case 3: z += 1
+            case 4: x -= 1
+            case 5: x += 1
+            default: return
+            }
+
+            let block = Block(id: UInt8(packet.itemStack.id), data: UInt8(packet.itemStack.metadata))
+            player.world.setBlock(x, y, z, block)
+        }
+
         registry.ignore(0x10, SetHotbarSlot.self)
-        registry.ignore(0x12, Animation.self)
+
+        registry.register(0x12, Animation.self) { packet, connection in
+            guard let player = connection.player else {
+                return
+            }
+
+            for otherPlayer in player.world.players where otherPlayer !== player {
+                try? otherPlayer.sendPacket(Animation(playerId: player.entityId, type: packet.type))
+            }
+        }
+
         registry.ignore(0x13, PlayerAction.self)
         registry.ignore(0x65, CloseContainer.self)
         registry.ignore(0x66, ClickSlot.self)
@@ -216,5 +258,9 @@ final class Server: @unchecked Sendable {
 
         try player.sendPacket(PlayerPositionAndRotation(position: player.position, onGround: false))
         world.sendMessage("\(ChatColor.yellow)\(player.username) joined the game")
+
+        for otherPlayer in world.players where otherPlayer !== player {
+            try? player.sendPacket(SpawnPlayer(player: otherPlayer))
+        }
     }
 }
