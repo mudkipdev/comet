@@ -76,8 +76,4 @@ class Container {
         subscribers.append(subscriber)
         subscriber.onFillContainer(itemStacks)
     }
-
-    func chooseFirstEmptySlot() {
-
-    }
 }
