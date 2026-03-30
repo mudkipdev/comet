@@ -221,11 +221,22 @@ final class Server: @unchecked Sendable {
             }
 
             for otherPlayer in player.world.players where otherPlayer !== player {
-                try? otherPlayer.sendPacket(Animation(playerId: player.entityId, type: packet.type))
+                try? otherPlayer.sendPacket(Animation(playerId: player.id, type: packet.type))
             }
         }
 
-        registry.ignore(0x13, PlayerAction.self)
+        registry.register(0x13, PlayerAction.self) { packet, connection in
+            guard let player = connection.player else {
+                return
+            }
+
+            switch packet.type {
+            case .startSneaking: player.sneaking = true
+            case .stopSneaking:  player.sneaking = false
+            default: break
+            }
+        }
+
         registry.ignore(0x65, CloseContainer.self)
         registry.ignore(0x66, ClickSlot.self)
         registry.ignore(0x6A, ContainerTransaction.self)
@@ -237,7 +248,7 @@ final class Server: @unchecked Sendable {
         let world = player.world
 
         try player.sendPacket(OutgoingLogin(
-            entityId: player.entityId,
+            entityId: player.id,
             worldSeed: world.seed,
             dimension: world.dimension
         ))

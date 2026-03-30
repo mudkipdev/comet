@@ -69,7 +69,7 @@ struct SpawnPlayer: OutgoingPacket {
     var heldItem: Int16
 
     init(player: Player) {
-        entityId = player.entityId
+        entityId = player.id
         username = player.username
         x = Int32(player.position.x)
         y = Int32(player.position.y)
@@ -110,7 +110,7 @@ struct TeleportEntity: OutgoingPacket {
     var pitch: Int8
 
     init(entity: Entity) {
-        entityId = entity.entityId
+        entityId = entity.id
         x = Int32(entity.position.x * 32)
         y = Int32(entity.position.y * 32)
         z = Int32(entity.position.z * 32)
@@ -125,6 +125,17 @@ struct TeleportEntity: OutgoingPacket {
         buffer.writeInteger(z)
         buffer.writeInteger(yaw)
         buffer.writeInteger(pitch)
+    }
+}
+
+struct EntityMetadata: OutgoingPacket {
+    static let id: UInt8 = 0x28
+    var entityId: Int32
+    var tracker: DataTracker
+
+    func write(to buffer: inout ByteBuffer) throws {
+        buffer.writeInteger(entityId)
+        tracker.write(to: &buffer)
     }
 }
 

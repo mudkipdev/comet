@@ -97,10 +97,11 @@ final class World: @unchecked Sendable, PacketReceiver {
         players.removeAll { $0 === player }
 
         for otherPlayer in players {
-            try? otherPlayer.sendPacket(DespawnEntity(entityId: player.entityId))
+            try? otherPlayer.sendPacket(DespawnEntity(entityId: player.id))
         }
     }
 
+    // TODO: in the future this might cause issues where packets are being sent to players who aren't logged in yet
     func sendPacket(_ packet: OutgoingPacket) {
         for player in players {
             try? player.sendPacket(packet)
