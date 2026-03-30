@@ -1,18 +1,43 @@
 import NIOCore
 
-enum Item: Int16 {
-    case air = 0
+struct Item: RawRepresentable, Equatable {
+    let rawValue: Int16
+    var maxStackSize: Int8 { 64 }
+
+    static let air = Item(rawValue: 0)
+    // TODO: add more items
 }
 
+
 struct ItemStack {
-    var id: Int16
+    static let air = ItemStack(item: .air)
+
     var item: Item
     var amount: Int8 = 1
     var metadata: Int16 = 0
 
+    var id: Int16 {
+        item.rawValue
+    }
+
+    var empty: Bool {
+        item == .air || amount <= 0
+    }
+
+    init(item: Item, amount: Int8 = 1, metadata: Int16 = 0) {
+        self.item = item
+        self.amount = amount
+        self.metadata = metadata
+    }
+
+    init(block: BlockLike, amount: Int8 = 1) {
+        let blockState = block.asBlock()
+        self.init(item: Item(rawValue: Int16(blockState.id)), amount: amount, metadata: Int16(blockState.data))
+    }
+
     init(from buffer: inout ByteBuffer) throws {
-        id = try buffer.readInteger()
-        item = Item(rawValue: id) ?? .air
+        let id: Int16 = try buffer.readInteger()
+        item = Item(rawValue: id)
 
         if id > 0 {
             amount = try buffer.readInteger()

@@ -131,11 +131,11 @@ struct TeleportEntity: OutgoingPacket {
 struct EntityMetadata: OutgoingPacket {
     static let id: UInt8 = 0x28
     var entityId: Int32
-    var tracker: DataTracker
+    var dataTracker: DataTracker
 
     func write(to buffer: inout ByteBuffer) throws {
         buffer.writeInteger(entityId)
-        tracker.write(to: &buffer)
+        dataTracker.write(to: &buffer)
     }
 }
 

@@ -185,7 +185,10 @@ final class Server: @unchecked Sendable {
                 return
             }
 
-            player.world.setBlock(packet.x, Int32(packet.y), packet.z, Block.air)
+            let world = player.world
+            let block = world.getBlock(packet.x, Int32(packet.y), packet.z)
+            world.setBlock(packet.x, Int32(packet.y), packet.z, Block.air)
+            player.inventory.addItemStack(ItemStack(block: block))
         }
 
         registry.register(0x0F, PlaceBlock.self) { packet, connection in
