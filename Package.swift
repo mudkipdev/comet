@@ -16,5 +16,14 @@ let package = Package(
             ],
             path: "src"
         ),
+        .testTarget(
+            name: "tests",
+            dependencies: [
+                "comet",
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+            ],
+            path: "tests"
+        )
     ]
 )

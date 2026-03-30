@@ -27,6 +27,12 @@ extension Block: BlockLike {
     }
 }
 
+enum Material {
+    case rock
+    case iron
+    case todo
+}
+
 extension Block {
     static let air = Block(id: 0)
     static let stone = Block(id: 1)
