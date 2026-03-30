@@ -65,3 +65,23 @@ struct ItemStack {
         return Self(item: item, amount: amount, metadata: metadata)
     }
 }
+
+enum ToolTier {
+    case wood
+    case stone
+    case gold
+    case iron
+    case diamond
+}
+
+enum ToolType {
+    case sword
+    case pickaxe
+    case axe
+    case shovel
+    case hoe
+
+    func from(item: Item) -> ToolType? {
+        return nil // not a tool
+    }
+}
