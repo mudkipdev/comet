@@ -44,7 +44,7 @@ class Container {
                 continue
             }
 
-            if item == newItemStack.item {
+            if item == newItemStack.item && itemStack.metadata == newItemStack.metadata {
                 let summedAmount = Int16(itemStack.amount) + Int16(newItemStack.amount)
 
                 if summedAmount > Int16(item.maxStackSize) {

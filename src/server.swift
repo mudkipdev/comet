@@ -4,16 +4,48 @@ import NIOPosix
 let ticksPerSecond = 20
 let viewDistance: Int32 = 4
 
+private func handlePlayerLogin(_ player: Player) throws {
+    print("\(player.username) joined the server.")
+    let world = player.world
+
+    try player.sendPacket(OutgoingLogin(
+        entityId: player.id,
+        worldSeed: world.seed,
+        dimension: world.dimension
+    ))
+
+    try player.sendPacket(SetSpawnPosition(position: world.spawnPosition))
+    try player.sendPacket(SetTime(time: world.time))
+
+    for chunkX in -viewDistance...viewDistance {
+        for chunkZ in -viewDistance...viewDistance {
+            try player.sendPacket(SetChunkVisibility(x: chunkX, z: chunkZ, load: true))
+            let chunk = world.getChunk(chunkX, chunkZ)
+
+            if let packet = chunk.createChunkPacket() {
+                try player.sendPacket(packet)
+            }
+        }
+    }
+
+    try player.sendPacket(PlayerPositionAndRotation(position: player.position, onGround: false))
+    world.sendMessage("\(ChatColor.yellow)\(player.username) joined the game")
+
+    for otherPlayer in world.players where otherPlayer !== player {
+        try? player.sendPacket(SpawnPlayer(player: otherPlayer))
+    }
+}
+
 final class Server: @unchecked Sendable {
     let port: UInt16
-    let world = World()
-    let packetRegistry: PacketRegistry
+    lazy var world = World(server: self)
+    lazy var packetRegistry: PacketRegistry = buildPacketRegistry()
+    lazy var commandRegistry: CommandRegistry = buildCommandRegistry()
 
     private var tickTask: Task<Void, Never>?
 
     init(port: UInt16 = 25565) {
         self.port = port
-        self.packetRegistry = Server.buildRegistry()
     }
 
     func start() async throws {
@@ -105,7 +137,7 @@ final class Server: @unchecked Sendable {
         }
     }
 
-    private static func buildRegistry() -> PacketRegistry {
+    private func buildPacketRegistry() -> PacketRegistry {
         var registry = PacketRegistry()
 
         registry.ignore(0x00, KeepAlive.self)
@@ -134,7 +166,19 @@ final class Server: @unchecked Sendable {
         }
 
         registry.register(0x03, ChatMessage.self) { packet, connection in
-            if let player = connection.player {
+            guard let player = connection.player else { return }
+
+            if packet.message.hasPrefix("/") {
+                do {
+                    try self.commandRegistry.dispatch(player: player, input: String(packet.message.dropFirst()))
+                } catch CommandError.invalidSyntax {
+                    player.sendMessage("\(ChatColor.red)Invalid syntax!")
+                } catch CommandError.unknownCommand {
+                    player.sendMessage("\(ChatColor.red)Unknown command!")
+                } catch CommandError.noPermission {
+                    player.sendMessage("\(ChatColor.red)You don't have permission to run this command!")
+                }
+            } else {
                 let message = "<\(player.username)> \(packet.message)"
                 player.world.sendMessage(message)
                 print(message)
@@ -251,35 +295,11 @@ final class Server: @unchecked Sendable {
         return registry
     }
 
-    private static func handlePlayerLogin(_ player: Player) throws {
-        print("\(player.username) joined the server.")
-        let world = player.world
-
-        try player.sendPacket(OutgoingLogin(
-            entityId: player.id,
-            worldSeed: world.seed,
-            dimension: world.dimension
-        ))
-
-        try player.sendPacket(SetSpawnPosition(position: world.spawnPosition))
-        try player.sendPacket(SetTime(time: world.time))
-
-        for chunkX in -viewDistance...viewDistance {
-            for chunkZ in -viewDistance...viewDistance {
-                try player.sendPacket(SetChunkVisibility(x: chunkX, z: chunkZ, load: true))
-                let chunk = world.getChunk(chunkX, chunkZ)
-
-                if let packet = chunk.createChunkPacket() {
-                    try player.sendPacket(packet)
-                }
-            }
-        }
-
-        try player.sendPacket(PlayerPositionAndRotation(position: player.position, onGround: false))
-        world.sendMessage("\(ChatColor.yellow)\(player.username) joined the game")
-
-        for otherPlayer in world.players where otherPlayer !== player {
-            try? player.sendPacket(SpawnPlayer(player: otherPlayer))
-        }
+    private func buildCommandRegistry() -> CommandRegistry {
+        var registry = CommandRegistry()
+        registry.register(ClearCommand.self)
+        registry.register(GiveCommand.self)
+        registry.register(HelpCommand.self)
+        return registry
     }
 }

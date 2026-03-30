@@ -140,6 +140,12 @@ struct ItemStack {
         item == .air || amount <= 0
     }
 
+    init(id: Int16, amount: Int8 = 1, metadata: Int16 = 0) {
+        self.item = Item(rawValue: id) // bruh
+        self.amount = amount
+        self.metadata = metadata
+    }
+
     init(item: Item, amount: Int8 = 1, metadata: Int16 = 0) {
         self.item = item
         self.amount = amount

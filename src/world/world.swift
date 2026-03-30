@@ -69,18 +69,22 @@ struct ChunkCoordinates: Hashable {
 }
 
 final class World: @unchecked Sendable, PacketReceiver {
+    let server: Server
+    public private(set) var players: [Player] = []
+
     var seed: Int64 = 0
+    let generator: WorldGenerator
+
     var dimension: Dimension = .overworld
     var spawnPosition = BlockPosition(x: 0, y: 68, z: 0)
     var chunks: [ChunkCoordinates: Chunk] = [:]
+
     var nextEntityId: Int32 = 1
     var time: Int64 = 0
     var ticks: Int = 0
 
-    let generator: WorldGenerator
-    public private(set) var players: [Player] = []
-
-    init(seed: Int64 = 0, generator: WorldGenerator? = nil) {
+    init(server: Server, seed: Int64 = 0, generator: WorldGenerator? = nil) {
+        self.server = server
         self.seed = seed
         self.generator = generator ?? DefaultWorldGenerator(seed: seed)
     }
@@ -143,8 +147,8 @@ final class World: @unchecked Sendable, PacketReceiver {
         var chunk = getChunk(chunkX, chunkZ)
         chunk.setBlock(Int(x & 15), Int(y), Int(z & 15), block)
         chunks[coordinates] = chunk
-        let b = block.asBlock()
-        sendPacket(SetBlock(x: x, y: Int8(y), z: z, type: b.id, metadata: b.data))
+        let blockState = block.asBlock()
+        sendPacket(SetBlock(x: x, y: Int8(y), z: z, type: blockState.id, metadata: blockState.data))
     }
 
     func getChunk(_ x: Int32, _ z: Int32) -> Chunk {
